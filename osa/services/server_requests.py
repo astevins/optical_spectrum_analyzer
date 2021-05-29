@@ -8,7 +8,7 @@ from osa.exceptions.invalid_response import InvalidResponse
 from osa.exceptions.response_timeout import ResponseTimeout
 
 
-def get_trace() -> Dict[str, Union[int, str]]:
+def get_trace() -> Dict[str, Union[float, str, list[float]]]:
     """
     Requests trace data from osa server.
     """
@@ -22,7 +22,6 @@ def get_trace() -> Dict[str, Union[int, str]]:
     except:
         raise InvalidResponse("Invalid response to TRACE request.")
 
-    print(trace_res)
     try:
         print("Returning trace.")
         return {'time': trace_res['timestamp'],
