@@ -10,17 +10,17 @@ from osa.services import server_requests
 
 
 def load_test_json_response() -> json:
-    with open('./data/large_trace_response.json') as f:
+    with open('./data/small_trace_response.json') as f:
         return json.load(f)
 
 
 class GetTraceTests(unittest.TestCase):
     def setUp(self):
-        self.test_json_response = load_test_json_response();
+        self.test_json_response = load_test_json_response()
 
     @patch('requests.get')
     def test_valid_response(self, mock_get):
-        mock_get.json.return_value = self.test_json_response
+        mock_get.return_value.json.return_value = self.test_json_response
 
         try:
             response = server_requests.get_trace()
@@ -36,9 +36,11 @@ class GetTraceTests(unittest.TestCase):
         try:
             response = server_requests.get_trace()
         except ResponseTimeout as e:
-            self.assertIsNotNone(e.message)
+            self.assertIsNotNone(str(e))
+            return
         except Exception as e:
             self.fail(f"Wrong error thrown for trace request timeout: {e.__class__.__name__}")
+            return
 
         self.fail("No error thrown for trace request timeout")
 
@@ -49,9 +51,11 @@ class GetTraceTests(unittest.TestCase):
         try:
             response = server_requests.get_trace()
         except InvalidResponse as e:
-            self.assertIsNotNone(e.message)
+            self.assertIsNotNone(str(e))
+            return
         except Exception as e:
             self.fail(f"Wrong error thrown for invalid trace response: {e.__class__.__name__}")
+            return
 
         self.fail("No error thrown for invalid trace response")
 
