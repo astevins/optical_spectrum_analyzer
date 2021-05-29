@@ -1,0 +1,1 @@
+API_URL = "http://flaskosa.herokuapp.com/cmd/"
