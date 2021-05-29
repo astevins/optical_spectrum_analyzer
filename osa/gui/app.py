@@ -74,16 +74,22 @@ class MainWindow(QtWidgets.QMainWindow):
             is provided, otherwise requests new data.
         """
 
+        # Request new trace
         if not trace_data:
             print("Requesting new plot data.")
             trace_data = get_trace()
         x_lims = get_x_lims()
 
-        print("Setting plot data.")
+        # Update plot title
+        self.plot_widget.set_title(
+            f"{trace_data.instrument} :: {trace_data.time}")
+
+        # Update data
         self.plot_widget.update_data(
             trace_data.data,
             x_lims[0],
             trace_data.x_increment)
+        print("Set new plot data.")
 
 
 def run():

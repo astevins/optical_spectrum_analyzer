@@ -38,10 +38,11 @@ def get_trace() -> TraceData:
         raise InvalidResponse("Invalid response to TRACE request.")
 
     x_increment_nm = trace_res['xincrement'] * math.pow(10, 9)
+    time_formatted = __convert_to_iso_8601__(trace_res['timestamp'])
 
     try:
         return TraceData(data=trace_res['ydata'],
-                         time=trace_res['timestamp'],
+                         time=time_formatted,
                          instrument=trace_res['instrument_object'],
                          x_label=trace_res['xlabel'],
                          y_label='dBm',
@@ -50,6 +51,20 @@ def get_trace() -> TraceData:
     except KeyError:
         raise InvalidResponse("Missing data in response to TRACE request.")
 
+
+def __convert_to_iso_8601__(date_and_time: str) -> str:
+    """
+    Converts date and time from OSA server to ISO 8601 format
+    :param time: Date and time in format given by instrument
+    :return: Date and time in ISO 8601 format
+    """
+    split = date_and_time.split(' ')
+    date = split[0]
+    time = split[1]
+
+    date = '20' + date.replace('.', '-')
+    time = time + 'Z'
+    return date + 'T' + time
 
 def get_x_lims() -> list[int]:
     """

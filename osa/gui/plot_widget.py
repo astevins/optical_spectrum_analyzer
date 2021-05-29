@@ -19,12 +19,14 @@ class PlotWidget(QtWidgets.QWidget):
 
     def build_ui(self):
         self.setLayout(self.layout)
-        self.graphWidget.setContentsMargins(40, 40, 40, 40)
         self.layout.addWidget(self.graphWidget)
         self.graphWidget.showGrid(x=True, y=True)
 
     def set_labels(self, x_label: str, y_label: str):
         self.graphWidget.setLabels(bottom=x_label, left=y_label)
+
+    def set_title(self, title: str):
+        self.graphWidget.setTitle(title)
 
     def update_data(self, data: list[float], x_start: float, x_increment: float):
         # Create x data from range
