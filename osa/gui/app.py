@@ -1,7 +1,7 @@
 import sys
 from PyQt5 import QtWidgets
-from PyQt5 import QtCore
-from PyQt5 import QtGui
+
+from osa.gui.controller_widget import Controller
 from osa.gui.plot_widget import PlotWidget
 from osa.services.server_requests import get_trace, get_x_lims
 
@@ -9,18 +9,24 @@ from osa.services.server_requests import get_trace, get_x_lims
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None):
         super().__init__(parent)
+        self.layout = QtWidgets.QGridLayout()
+        self.window = QtWidgets.QWidget()
+        self.plot_widget = PlotWidget()
+        self.controller = Controller()
+
         self.init_window()
         self.init_plot()
+        self.init_controller()
 
     def init_window(self):
-        self.window = QtWidgets.QWidget()
-        self.layout = QtWidgets.QGridLayout()
         self.setCentralWidget(self.window)
         self.window.setLayout(self.layout)
 
     def init_plot(self):
-        self.plot_widget = PlotWidget()
         self.layout.addWidget(self.plot_widget)
+
+    def init_controller(self):
+        self.layout.addWidget(self.controller)
 
     def set_plot_data(self):
         trace_data = get_trace()
