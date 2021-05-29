@@ -28,12 +28,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         print("Setting plot data.")
         self.plot_widget.set_labels(
-            f"{trace_data['x_label']} ({trace_data['x_units']})",
-            trace_data['y_label'])
+            f"{trace_data.x_label} ({trace_data.x_units})",
+            trace_data.y_label)
         self.plot_widget.update_data(
-            trace_data['data'],
+            trace_data.data,
             x_lims[0],
-            trace_data['x_increment'])
+            trace_data.x_increment)
 
 
 def run():

@@ -27,7 +27,7 @@ class GetTraceTests(unittest.TestCase):
         except:
             self.fail("Error thrown for valid request response.")
 
-        self.assertGreater(len(response['data']), 0)
+        self.assertGreater(len(response.data), 0)
 
     @patch('requests.get')
     def test_response_timeout(self, mock_get):

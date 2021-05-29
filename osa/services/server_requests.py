@@ -9,7 +9,20 @@ from osa.exceptions.invalid_response import InvalidResponse
 from osa.exceptions.response_timeout import ResponseTimeout
 
 
-def get_trace() -> Dict[str, Union[float, str, list[float]]]:
+class TraceData:
+    def __init__(self, data: list[float], time: str, instrument: str,
+                 x_label: str, y_label: str,
+                 x_units: str, x_increment: float):
+        self.data = data
+        self.time = time
+        self.instrument = instrument
+        self.x_label = x_label
+        self.y_label = y_label
+        self.x_units = x_units
+        self.x_increment = x_increment
+
+
+def get_trace() -> TraceData:
     """
     Requests trace data from osa server.
     Converts x_increment to nanometers and returns x_units as nm
@@ -27,14 +40,13 @@ def get_trace() -> Dict[str, Union[float, str, list[float]]]:
     x_increment_nm = trace_res['xincrement'] * math.pow(10, 9)
 
     try:
-        print("Returning trace.")
-        return {'time': trace_res['timestamp'],
-                'instrument': trace_res['instrument_object'],
-                'x_label': trace_res['xlabel'],
-                'x_increment': x_increment_nm,
-                'x_units': 'nm',
-                'y_label': 'dBm',
-                'data': trace_res['ydata']}
+        return TraceData(data=trace_res['ydata'],
+                         time=trace_res['timestamp'],
+                         instrument=trace_res['instrument_object'],
+                         x_label=trace_res['xlabel'],
+                         y_label='dBm',
+                         x_increment=x_increment_nm,
+                         x_units='nm')
     except KeyError:
         raise InvalidResponse("Missing data in response to TRACE request.")
 
