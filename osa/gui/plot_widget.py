@@ -7,9 +7,14 @@ class PlotWidget(QtWidgets.QWidget):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
+
+        # Components
         self.layout = QtWidgets.QGridLayout()
         self.graphWidget = pg.PlotWidget()
         self.line_pen = pg.mkPen(color='g', width=1)
+        self.line = None
+
+        # Init
         self.build_ui()
 
     def build_ui(self):
@@ -22,7 +27,14 @@ class PlotWidget(QtWidgets.QWidget):
         self.graphWidget.setLabels(bottom=x_label, left=y_label)
 
     def update_data(self, data: list[float], x_start: float, x_increment: float):
+        # Create x data from range
         x_end = x_start + x_increment * len(data)
         x = np.arange(x_start, x_end, x_increment)
-        self.graphWidget.plot(x=x, y=data, pen=self.line_pen)
+
+        # Clear past line
+        if self.line:
+            self.line.clear()
+
+        # Draw new line
+        self.line = self.graphWidget.plot(x=x, y=data, pen=self.line_pen)
         self.graphWidget.setXRange(x_start, x_end)
