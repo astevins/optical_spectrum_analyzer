@@ -1,4 +1,5 @@
 import json
+import math
 from typing import Dict, Union
 
 import requests
@@ -23,13 +24,15 @@ def get_trace() -> Dict[str, Union[float, str, list[float]]]:
     except:
         raise InvalidResponse("Invalid response to TRACE request.")
 
+    x_increment_nm = trace_res['xincrement'] * math.pow(10, 9)
+
     try:
         print("Returning trace.")
         return {'time': trace_res['timestamp'],
                 'instrument': trace_res['instrument_object'],
                 'x_label': trace_res['xlabel'],
-                'x_increment': trace_res['xincrement'],
-                'x_units': trace_res['xunits'],
+                'x_increment': x_increment_nm,
+                'x_units': 'nm',
                 'y_label': 'dBm',
                 'data': trace_res['ydata']}
     except KeyError:
@@ -43,7 +46,7 @@ def get_x_lims() -> list[int]:
     """
 
     try:
-        res = requests.get(API_URL + 'LIM', timeout=1)
+        res = requests.get(API_URL + 'LIM', timeout=2)
     except requests.exceptions.Timeout:
         raise ResponseTimeout("LIM request timed out.")
 
