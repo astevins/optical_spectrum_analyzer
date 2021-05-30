@@ -37,6 +37,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_window(self):
         self.setCentralWidget(self.window)
         self.window.setLayout(self.layout)
+        self.setWindowTitle('Optical Spectrum Analyzer')
 
     def init_plot(self):
         self.layout.addWidget(self.plot_widget)
