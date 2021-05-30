@@ -1,1 +1,5 @@
 /venv/
+/**/build/
+/**/dist/
+/osa/OSA_GUI.spec
+/osa.egg-info
