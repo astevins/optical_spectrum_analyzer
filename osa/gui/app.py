@@ -1,7 +1,8 @@
+import os
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSlot, QTimer
-from PyQt5.QtWidgets import QMessageBox
+from PyQt5.QtWidgets import QMessageBox, QFileDialog
 
 from osa.exceptions.invalid_response import InvalidResponse
 from osa.exceptions.osa_server_exception import OsaServerException
@@ -23,14 +24,20 @@ class MainWindow(QtWidgets.QMainWindow):
         self.layout = QtWidgets.QGridLayout()
         self.window = QtWidgets.QWidget()
         self.plot_widget = PlotWidget()
+        self.menu_bar = self.menuBar()
         self.controller = Controller()
         self.update_data_timer = QTimer()
         self.alert_box = QtWidgets.QMessageBox()
+
+        # State
+        self.file_save_directory = os.getcwd()
 
         # Init
         self.init_window()
         self.init_plot()
         self.init_controller()
+        self.init_save_action()
+        self.init_menu_bar()
         self.init_timer()
         self.init_failed_connection_alert_box()
 
@@ -41,6 +48,25 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_plot(self):
         self.layout.addWidget(self.plot_widget)
+
+    def init_menu_bar(self):
+        file_menu = self.menu_bar.addMenu('&File')
+        file_menu.addAction(self.init_save_action())
+        file_menu.addAction(self.init_set_directory_action())
+        file_menu.setToolTipsVisible(True)
+
+    def init_save_action(self):
+        save_action = QtWidgets.QAction('&Save', self)
+        save_action.setShortcut('Ctrl+S')
+        save_action.setToolTip('Save image of current plot view')
+        save_action.triggered.connect(self.save_plot_image)
+        return save_action
+
+    def init_set_directory_action(self):
+        set_directory_action = QtWidgets.QAction('Set directory', self)
+        set_directory_action.setToolTip('Save location to save plot images')
+        set_directory_action.triggered.connect(self.set_image_save_directory)
+        return set_directory_action
 
     def init_controller(self):
         self.layout.addWidget(self.controller)
@@ -72,10 +98,6 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         self.plot_widget.set_x_units(frequency=False)
         self.update_plot_data(retry_on_error=True)
-
-    def show_failed_connection_alert(self):
-        """ Shows popup alert for failed connection to server."""
-        self.alert_box.exec_()
 
     @pyqtSlot()
     def start_acquisition(self):
@@ -126,9 +148,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_plot_data(trace_data, x_lims)
 
     def set_plot_data(self, trace_data: TraceData, x_lims: list[float]):
+        """
+        Sets plot data from trace data and x limits retrieved from server.
+        Updates plot title to reflect time trace was taken.
+        """
+
         # Update plot title
         self.plot_widget.set_title(
-            f"{trace_data.instrument} :: {trace_data.time}")
+            f"{trace_data.instrument}::{trace_data.time}")
 
         # Update data
         self.plot_widget.update_data(
@@ -147,6 +174,17 @@ class MainWindow(QtWidgets.QMainWindow):
         """ Set plot to display x-axis as frequency """
         self.plot_widget.set_x_units(frequency=True)
 
+    def show_failed_connection_alert(self):
+        """ Shows popup alert for failed connection to server."""
+        self.alert_box.exec_()
+
+    def set_image_save_directory(self):
+        """ Opens file select dialog to choose directory for plot images. """
+        self.file_save_directory = str(QFileDialog.getExistingDirectory(self, 'Select Directory'))
+
+    def save_plot_image(self):
+        """ Saves plot image as png. """
+        self.plot_widget.export_plot(self.file_save_directory)
 
 
 def run():
