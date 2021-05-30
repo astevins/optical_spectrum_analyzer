@@ -5,6 +5,7 @@ import requests
 from osa.config import API_URL
 from osa.exceptions.invalid_response import InvalidResponse
 from osa.exceptions.response_timeout import ResponseTimeout
+from osa.utils.unit_conversions import m_to_nm
 
 
 class TraceData:
@@ -42,7 +43,7 @@ def get_trace() -> TraceData:
     except:
         raise InvalidResponse("Invalid response to TRACE request.")
 
-    x_increment_nm = trace_res['xincrement'] * math.pow(10, 9)
+    x_increment_nm = m_to_nm(trace_res['xincrement'])
     time_formatted = __convert_to_iso_8601__(trace_res['timestamp'])
 
     try:
