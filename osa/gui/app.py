@@ -2,9 +2,12 @@ import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSlot, QTimer
 
+from osa.exceptions.invalid_response import InvalidResponse
+from osa.exceptions.osa_server_exception import OsaServerException
 from osa.gui.controller_widget import Controller
 from osa.gui.plot_widget import PlotWidget
-from osa.services.server_requests import get_trace, get_x_lims
+from osa.services.request_error_manager import request_until_success
+from osa.services.server_requests import get_trace, get_x_lims, TraceData
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -21,6 +24,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.plot_widget = PlotWidget()
         self.controller = Controller()
         self.update_data_timer = QTimer()
+        self.alert_box = QtWidgets.QMessageBox()
 
         # Init
         self.init_window()
@@ -44,19 +48,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def init_timer(self):
         self.update_data_timer.timeout.connect(self.update_plot_data)
 
-    def init_plot_data(self):
-        """
-        Gets first trace for plot and sets axis labels
-        """
-
-        print("Requesting initial plot data.")
-        trace_data = get_trace()
-
-        self.plot_widget.set_labels(
-            f"{trace_data.x_label} ({trace_data.x_units})",
-            trace_data.y_label)
-        self.update_plot_data(trace_data)
-
     def start_acquisition(self):
         print("Starting continuous acquisition at 1 Hz.")
         self.update_data_timer.start(1000)
@@ -66,23 +57,43 @@ class MainWindow(QtWidgets.QMainWindow):
         self.update_data_timer.stop()
 
     @pyqtSlot()
-    def update_plot_data(self, trace_data=None):
+    def update_plot_data(self, retry_on_error=False):
         """
-        Plots new trace
-        :param trace_data:
-            Uses previously acquired trace data if trace_data
-            is provided, otherwise requests new data.
+        Requests and plots new trace.
+        :param retry_on_error:
+            - If True, will repeat requests up to 5 times until a valid response is received.
+                If still no valid response is received, displays popup alert and skips update.
+            - If false, will log errors and skip plot data update.
         """
 
         # Request new trace
-        if not trace_data:
-            print("Requesting new plot data.")
-            trace_data = get_trace()
-        x_lims = get_x_lims()
+        print("Requesting new plot data.")
+        num_attempts = 5
+        if retry_on_error:
+            try:
+                trace_data = request_until_success(get_trace, num_attempts)
+                x_lims = request_until_success(get_x_lims, num_attempts)
+            except InvalidResponse as e:
+                print(str(e))
+                return
+        else:
+            try:
+                trace_data = get_trace()
+                x_lims = get_x_lims()
+            except OsaServerException as e:
+                print(str(e))
+                print("Skipping plot update due to server error.")
+                return
 
-        # Update plot title
+        self.set_plot_data(trace_data, x_lims)
+
+    def set_plot_data(self, trace_data: TraceData, x_lims: list[float]):
+        # Update plot labels
         self.plot_widget.set_title(
             f"{trace_data.instrument} :: {trace_data.time}")
+        self.plot_widget.set_labels(
+            f"{trace_data.x_label} ({trace_data.x_units})",
+            trace_data.y_label)
 
         # Update data
         self.plot_widget.update_data(
@@ -97,7 +108,7 @@ def run():
 
     win = MainWindow()
     win.show()
-    win.init_plot_data()
+    win.update_plot_data(retry_on_error=True)
 
     sys.exit(app.exec_())
 

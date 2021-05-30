@@ -1,4 +1,5 @@
 from osa.exceptions.invalid_response import InvalidResponse
+from osa.exceptions.osa_server_exception import OsaServerException
 
 
 def request_until_success(fn, max_attempts: int):
@@ -16,8 +17,9 @@ def request_until_success(fn, max_attempts: int):
     for i in range(0, max_attempts):
         try:
             return fn()
-        except Exception as e:
+        except OsaServerException as e:
             print(str(e))
-            print(f"Attempt {i} to call {fn} failed.")
+            print(f"Attempt {i + 1} to call {fn} failed.")
 
-    raise InvalidResponse(f"Failed to get valid response after {max_attempts} attempts.")
+    raise InvalidResponse(f"Failed to get valid response from {fn} after "
+                          f"{max_attempts} attempts.")
