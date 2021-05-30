@@ -1,6 +1,4 @@
-import json
 import math
-from typing import Dict, Union
 
 import requests
 
@@ -10,6 +8,9 @@ from osa.exceptions.response_timeout import ResponseTimeout
 
 
 class TraceData:
+    """
+    Represents data returned from get_trace()
+    """
     def __init__(self, data: list[float], time: str, instrument: str,
                  x_label: str, y_label: str,
                  x_units: str, x_increment: float):
@@ -26,6 +27,10 @@ def get_trace() -> TraceData:
     """
     Requests trace data from osa server.
     Converts x_increment to nanometers and returns x_units as nm
+    :return: TraceData object with results
+    :raises:
+        ResponseTimeout - raised if trace request times out (timeout at 1 second)
+        InvalidResponse - raised if trace response is invalid
     """
 
     print("Requesting trace.")
@@ -52,24 +57,13 @@ def get_trace() -> TraceData:
         raise InvalidResponse("Missing data in response to TRACE request.")
 
 
-def __convert_to_iso_8601__(date_and_time: str) -> str:
+def get_x_lims() -> list[float]:
     """
-    Converts date and time from OSA server to ISO 8601 format
-    :param time: Date and time in format given by instrument
-    :return: Date and time in ISO 8601 format
-    """
-    split = date_and_time.split(' ')
-    date = split[0]
-    time = split[1]
-
-    date = '20' + date.replace('.', '-')
-    time = time + 'Z'
-    return date + 'T' + time
-
-def get_x_lims() -> list[int]:
-    """
-    Requests x limits from OSA server
-    :return: List of two integers: [start, stop] x limits in nm
+    Requests x limits from OSA server.
+    :return: List of two integers: [start, stop] - x limits in nm.
+    :raises:
+        ResponseTimeout - raised if lim request times out (timeout at 2 seconds)
+        InvalidResponse - raised if lim response is invalid
     """
 
     try:
@@ -83,9 +77,26 @@ def get_x_lims() -> list[int]:
         raise (InvalidResponse("Invalid response to LIM request."))
 
 
+def __convert_to_iso_8601__(date_and_time: str) -> str:
+    """
+    Converts date and time from OSA server to ISO 8601 format
+    :param date_and_time: Date and time in format given by instrument
+    :return: Date and time in ISO 8601 format
+    """
+    split = date_and_time.split(' ')
+    date = split[0]
+    time = split[1]
+
+    date = '20' + date.replace('.', '-')
+    time = time + 'Z'
+    return date + 'T' + time
+
+
 def __parse_lim__(s: str) -> list[float]:
+    """ Gets list of limits from console output to LIM request """
     return eval(__remove_console_prefix__(s))
 
 
 def __remove_console_prefix__(s: str):
+    """ Removes prefix from OSA console outputs """
     return s.replace('+READY>', '', 1)
