@@ -1,6 +1,7 @@
 import sys
 from PyQt5 import QtWidgets
 from PyQt5.QtCore import pyqtSlot, QTimer
+from PyQt5.QtWidgets import QMessageBox
 
 from osa.exceptions.invalid_response import InvalidResponse
 from osa.exceptions.osa_server_exception import OsaServerException
@@ -31,6 +32,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.init_plot()
         self.init_controller()
         self.init_timer()
+        self.init_failed_connection_alert_box()
 
     def init_window(self):
         self.setCentralWidget(self.window)
@@ -41,18 +43,42 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_controller(self):
         self.layout.addWidget(self.controller)
-        self.controller.signals.single_clicked.connect(self.update_plot_data)
+        self.controller.signals.single_clicked.connect(
+            lambda: self.update_plot_data(retry_on_error=True))
         self.controller.signals.start_clicked.connect(self.start_acquisition)
         self.controller.signals.stop_clicked.connect(self.stop_acquisition)
 
     def init_timer(self):
         self.update_data_timer.timeout.connect(self.update_plot_data)
 
+    def init_failed_connection_alert_box(self):
+        """
+        Inits popup alert box for failed connection to server.
+        This does not show the alert, only prepares it for future use.
+        """
+        # self.alert_box.hide()
+        self.alert_box.setIcon(QMessageBox.Critical)
+        self.alert_box.setText("Multiple consecutive requests for trace data failed.")
+        self.alert_box.setInformativeText("The OSA server may be down. Check console logs for details.")
+        self.alert_box.setWindowTitle("Failed to update plot")
+        self.alert_box.setStandardButtons(QMessageBox.Ok)
+
+    def show_failed_connection_alert(self):
+        """ Shows popup alert for failed connection to server."""
+        # self.alert_box.show()
+        self.alert_box.exec_()
+
     def start_acquisition(self):
+        """
+        Starts automatic calls to update plot data at 1 Hz
+        """
         print("Starting continuous acquisition at 1 Hz.")
         self.update_data_timer.start(1000)
 
     def stop_acquisition(self):
+        """
+        Stops automatically updating plot data
+        """
         print("Stopping continuous acquisition.")
         self.update_data_timer.stop()
 
@@ -75,6 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 x_lims = request_until_success(get_x_lims, num_attempts)
             except InvalidResponse as e:
                 print(str(e))
+                self.show_failed_connection_alert()
                 return
         else:
             try:
