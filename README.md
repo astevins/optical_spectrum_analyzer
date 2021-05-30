@@ -6,9 +6,9 @@ The OSA GUI provides an interface for downloading and plotting spectrums from th
 * To run the app from source code with Python (assumes the latest versions of Python and pip are installed)
   * Clone the source code
   * In the root directory of the project:
-    *`pip install -r requirements.txt` to install dependencies
-    *`python setup.py install` to install the osa package
-    *`start_osa_gui` to run the gui
+    * `pip install -r requirements.txt` to install dependencies
+    * `python setup.py install` to install the osa package
+    * `start_osa_gui` to run the gui
 
 # Features
 * Retrieve and plot single traces, or continously update plot with new traces at 1 Hz
