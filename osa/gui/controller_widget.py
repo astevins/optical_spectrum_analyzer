@@ -4,6 +4,8 @@ from PyQt5.QtWidgets import QGroupBox
 
 
 class Signals(QObject):
+    wavelength_toggled = pyqtSignal()
+    frequency_toggled = pyqtSignal()
     start_clicked = pyqtSignal()
     stop_clicked = pyqtSignal()
     single_clicked = pyqtSignal()
@@ -66,6 +68,14 @@ class Controller(QtWidgets.QWidget):
         self.radio_button_group.addButton(wavelength_radio_button, 1)
         self.radio_button_group.addButton(frequency_radio_button, 2)
         wavelength_radio_button.setChecked(True)
+        self.radio_button_group.buttonClicked.connect(self.radio_button_clicked)
+
+    def radio_button_clicked(self, button):
+        button_id = self.radio_button_group.id(button)
+        if button_id == 1:
+            self.signals.wavelength_toggled.emit()
+        else:
+            self.signals.frequency_toggled.emit()
 
     @pyqtSlot(bool)
     def start_stop_clicked(self, checked):

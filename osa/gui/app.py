@@ -44,10 +44,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def init_controller(self):
         self.layout.addWidget(self.controller)
-        self.controller.signals.single_clicked.connect(
+        signals = self.controller.signals
+        signals.single_clicked.connect(
             lambda: self.update_plot_data(retry_on_error=True))
-        self.controller.signals.start_clicked.connect(self.start_acquisition)
-        self.controller.signals.stop_clicked.connect(self.stop_acquisition)
+        signals.start_clicked.connect(self.start_acquisition)
+        signals.stop_clicked.connect(self.stop_acquisition)
+        signals.wavelength_toggled.connect(self.set_plot_units_wavelength)
+        signals.frequency_toggled.connect(self.set_plot_units_frequency)
 
     def init_timer(self):
         self.update_data_timer.timeout.connect(self.update_plot_data)
@@ -57,18 +60,24 @@ class MainWindow(QtWidgets.QMainWindow):
         Inits popup alert box for failed connection to server.
         This does not show the alert, only prepares it for future use.
         """
-        # self.alert_box.hide()
         self.alert_box.setIcon(QMessageBox.Critical)
         self.alert_box.setText("Multiple consecutive requests for trace data failed.")
         self.alert_box.setInformativeText("The OSA server may be down. Check console logs for details.")
         self.alert_box.setWindowTitle("Failed to update plot")
         self.alert_box.setStandardButtons(QMessageBox.Ok)
 
+    def populate_plot(self):
+        """
+        Init plot x-units to wavelength and update plot data.
+        """
+        self.plot_widget.set_x_units(frequency=False)
+        self.update_plot_data(retry_on_error=True)
+
     def show_failed_connection_alert(self):
         """ Shows popup alert for failed connection to server."""
-        # self.alert_box.show()
         self.alert_box.exec_()
 
+    @pyqtSlot()
     def start_acquisition(self):
         """
         Starts automatic calls to update plot data at 1 Hz
@@ -76,6 +85,7 @@ class MainWindow(QtWidgets.QMainWindow):
         print("Starting continuous acquisition at 1 Hz.")
         self.update_data_timer.start(1000)
 
+    @pyqtSlot()
     def stop_acquisition(self):
         """
         Stops automatically updating plot data
@@ -116,12 +126,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.set_plot_data(trace_data, x_lims)
 
     def set_plot_data(self, trace_data: TraceData, x_lims: list[float]):
-        # Update plot labels
+        # Update plot title
         self.plot_widget.set_title(
             f"{trace_data.instrument} :: {trace_data.time}")
-        self.plot_widget.set_labels(
-            f"{trace_data.x_label} ({trace_data.x_units})",
-            trace_data.y_label)
 
         # Update data
         self.plot_widget.update_data(
@@ -130,13 +137,24 @@ class MainWindow(QtWidgets.QMainWindow):
             trace_data.x_increment)
         print("Set new plot data.")
 
+    @pyqtSlot()
+    def set_plot_units_wavelength(self):
+        """ Set plot to display x-axis as wavelength """
+        self.plot_widget.set_x_units(frequency=False)
+
+    @pyqtSlot()
+    def set_plot_units_frequency(self):
+        """ Set plot to display x-axis as frequency """
+        self.plot_widget.set_x_units(frequency=True)
+
+
 
 def run():
     app = QtWidgets.QApplication([])
 
     win = MainWindow()
     win.show()
-    win.update_plot_data(retry_on_error=True)
+    win.populate_plot()
 
     sys.exit(app.exec_())
 
