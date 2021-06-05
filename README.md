@@ -8,7 +8,7 @@ The OSA GUI provides an interface for downloading and plotting spectrums from th
   * Run command prompt in the root directory of the project:
     * (optional) Start a virtual environment for the dependency installation.
     * `pip install -r requirements.txt` to install dependencies.
-    * `python -m main' to start the app.
+    * `python -m main` to start the app.
 
 ## Features
 * Retrieve and plot single traces, or continously update plot with new traces at 1 Hz.
